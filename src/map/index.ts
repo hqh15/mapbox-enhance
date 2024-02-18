@@ -128,7 +128,7 @@ export const addTextLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   textField: string | any[]
   textColor: string | any[]
@@ -178,7 +178,7 @@ export const addImageLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   image: string
   size: number | any[]
@@ -224,7 +224,7 @@ export const addCircleLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   color: string | any[]
   opacity: number | any[]
@@ -269,7 +269,7 @@ export const addLineLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   color: string | any[]
   dasharray: number[]
@@ -318,7 +318,7 @@ export const addFillLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   color: string | any[]
   opacity: number | any[]
@@ -361,7 +361,7 @@ export const addFillExtrusionLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   color: string | any[]
   base: number | any[]
@@ -425,7 +425,7 @@ export const addHeatmapLayer = ({
 }: {
   map: any
   id: string
-  data: any
+  data: GeoJSON
   zoomScope: number[]
   color: string | any[]
   intensity: number | any[]
