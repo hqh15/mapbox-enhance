@@ -5,7 +5,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.removeLayersByIds = exports.removeLayerById = exports.addHeatmapLayer = exports.addFillExtrusionLayer = exports.addFillLayer = exports.addLineLayer = exports.addCircleLayer = exports.addImageLayer = exports.addTextLayer = exports.initMap = void 0;
 const mapbox_gl_1 = __importDefault(require("mapbox-gl"));
-const initMap = ({ accessToken, container, center, bearing = 0, pitch = 0, style = {
+const wgs84BaseMap = [
+    {
+        id: '灰色底图',
+        url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer/tile/{z}/{y}/{x}'
+    },
+    {
+        id: '蓝色底图',
+        url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+    },
+    {
+        id: '暖色底图',
+        url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetWarm/MapServer/tile/{z}/{y}/{x}'
+    }
+];
+const gcj02BaseMap = [];
+const initMap = ({ accessToken, container, coordinateSystem = 'wgs84', baseMapId = '蓝色底图', center, bearing = 0, pitch = 0, style = {
     version: 8,
     glyphs: 'mapbox://fonts/mapbox/{fontstack}/{range}.pbf',
     sources: {},
@@ -21,6 +36,27 @@ const initMap = ({ accessToken, container, center, bearing = 0, pitch = 0, style
         style,
         zoom
     });
+    map.on('load', () => {
+        if (coordinateSystem === 'wgs84') {
+            wgs84BaseMap.forEach((item) => {
+                map.addSource(item.id, {
+                    type: 'raster',
+                    tiles: [item.url],
+                    tileSize: 256
+                });
+                map.addLayer({
+                    id: item.id,
+                    type: 'raster',
+                    source: item.id
+                });
+                if (item.id != baseMapId) {
+                    map.setLayoutProperty(item.id, 'visibility', 'none');
+                }
+            });
+        }
+        else {
+        }
+    });
     return map;
 };
 exports.initMap = initMap;
@@ -30,7 +66,7 @@ function addGeoJSONSource(map, id, data) {
         data
     });
 }
-const addTextLayer = ({ map, id, data, zoomScope = [0, 24], textField = 'name', textColor = '#000', textSize = 12, filter, beforeId }) => {
+const addTextLayer = ({ map, id, data, zoomScope = [0, 24], field = 'name', color = '#000', size = 12, filter, beforeId }) => {
     if (map.getLayer(id) || map.getSource(id)) {
         console.error('已有该图层/源');
         return;
@@ -43,13 +79,11 @@ const addTextLayer = ({ map, id, data, zoomScope = [0, 24], textField = 'name', 
         minzoom: zoomScope[0],
         maxzoom: zoomScope[1],
         layout: {
-            'text-field': typeof textField === 'string'
-                ? ['format', ['get', textField]]
-                : textField,
-            'text-size': textSize
+            'text-field': typeof field === 'string' ? ['format', ['get', field]] : field,
+            'text-size': size
         },
         paint: {
-            'text-color': textColor
+            'text-color': color
         },
         filter
     }, beforeId);

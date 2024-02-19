@@ -1,8 +1,27 @@
 import mapboxgl from 'mapbox-gl'
 
+const wgs84BaseMap = [
+  {
+    id: '灰色底图',
+    url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer/tile/{z}/{y}/{x}'
+  },
+  {
+    id: '蓝色底图',
+    url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+  },
+  {
+    id: '暖色底图',
+    url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetWarm/MapServer/tile/{z}/{y}/{x}'
+  }
+]
+
+const gcj02BaseMap = []
+
 export const initMap = ({
   accessToken,
   container,
+  coordinateSystem = 'wgs84',
+  baseMapId = '蓝色底图',
   center,
   bearing = 0,
   pitch = 0,
@@ -16,6 +35,8 @@ export const initMap = ({
 }: {
   accessToken: string
   container: string
+  coordinateSystem: 'wgs84' | 'gcj02'
+  baseMapId: string
   center: [number, number]
   bearing: number
   pitch: number
@@ -33,82 +54,31 @@ export const initMap = ({
     zoom
   })
 
+  map.on('load', () => {
+    if (coordinateSystem === 'wgs84') {
+      wgs84BaseMap.forEach((item) => {
+        map.addSource(item.id, {
+          type: 'raster',
+          tiles: [item.url],
+          tileSize: 256
+        })
+        map.addLayer({
+          id: item.id,
+          type: 'raster',
+          source: item.id
+        })
+        if (item.id != baseMapId) {
+          map.setLayoutProperty(item.id, 'visibility', 'none')
+        }
+      })
+    } else {
+    }
+  })
+
   return map
 }
 
-type GeoJSONPoint = {
-  type: 'Point'
-  coordinates: [number, number]
-}
-
-type GeoJSONMultiPoint = {
-  type: 'MultiPoint'
-  coordinates: [number, number][]
-}
-
-type GeoJSONLineString = {
-  type: 'LineString'
-  coordinates: [number, number][]
-}
-
-type GeoJSONMultiLineString = {
-  type: 'MultiLineString'
-  coordinates: [number, number][][]
-}
-
-type GeoJSONPolygon = {
-  type: 'Polygon'
-  coordinates: [number, number][][]
-}
-
-type GeoJSONMultiPolygon = {
-  type: 'MultiPolygon'
-  coordinates: [number, number][][][]
-}
-
-type GeoJSONGeometryCollection = {
-  type: 'GeometryCollection'
-  geometries: (
-    | GeoJSONPoint
-    | GeoJSONMultiPoint
-    | GeoJSONLineString
-    | GeoJSONMultiLineString
-    | GeoJSONPolygon
-    | GeoJSONMultiPolygon
-  )[]
-}
-
-type GeoJSONFeature = {
-  type: 'Feature'
-  geometry:
-    | GeoJSONPoint
-    | GeoJSONMultiPoint
-    | GeoJSONLineString
-    | GeoJSONMultiLineString
-    | GeoJSONPolygon
-    | GeoJSONMultiPolygon
-    | GeoJSONGeometryCollection
-  properties: { [key: string]: any }
-  id?: string | number
-}
-
-type GeoJSONFeatureCollection = {
-  type: 'FeatureCollection'
-  features: GeoJSONFeature[]
-}
-
-export type GeoJSON =
-  | GeoJSONPoint
-  | GeoJSONMultiPoint
-  | GeoJSONLineString
-  | GeoJSONMultiLineString
-  | GeoJSONPolygon
-  | GeoJSONMultiPolygon
-  | GeoJSONGeometryCollection
-  | GeoJSONFeature
-  | GeoJSONFeatureCollection
-
-function addGeoJSONSource(map: any, id: string, data: GeoJSON) {
+function addGeoJSONSource(map: any, id: string, data: any) {
   map.addSource(id, {
     type: 'geojson',
     data
@@ -120,21 +90,21 @@ export const addTextLayer = ({
   id,
   data,
   zoomScope = [0, 24],
-  textField = 'name',
-  textColor = '#000',
-  textSize = 12,
+  field = 'name',
+  color = '#000',
+  size = 12,
   filter,
   beforeId
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
-  textField: string | any[]
-  textColor: string | any[]
-  textSize: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  field: string | any[]
+  color: string | any[]
+  size: number | any[]
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -150,13 +120,11 @@ export const addTextLayer = ({
       maxzoom: zoomScope[1],
       layout: {
         'text-field':
-          typeof textField === 'string'
-            ? ['format', ['get', textField]]
-            : textField,
-        'text-size': textSize
+          typeof field === 'string' ? ['format', ['get', field]] : field,
+        'text-size': size
       },
       paint: {
-        'text-color': textColor
+        'text-color': color
       },
       filter
     },
@@ -178,14 +146,14 @@ export const addImageLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   image: string
   size: number | any[]
   opacity: number | any[]
   isAllowOverlap: boolean
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -224,13 +192,13 @@ export const addCircleLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   color: string | any[]
   opacity: number | any[]
   radius: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -269,14 +237,14 @@ export const addLineLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   color: string | any[]
   dasharray: number[]
   opacity: number | any[]
   width: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -318,12 +286,12 @@ export const addFillLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   color: string | any[]
   opacity: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -361,14 +329,14 @@ export const addFillExtrusionLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   color: string | any[]
   base: number | any[]
   height: number | any[]
   opacity: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
@@ -425,15 +393,15 @@ export const addHeatmapLayer = ({
 }: {
   map: any
   id: string
-  data: GeoJSON
+  data: any
   zoomScope: number[]
   color: string | any[]
   intensity: number | any[]
   opacity: number | any[]
   radius: number | any[]
   weight: number | any[]
-  filter: any[]
-  beforeId: string | undefined
+  filter?: any[]
+  beforeId?: string
 }) => {
   if (map.getLayer(id) || map.getSource(id)) {
     console.error('已有该图层/源')
