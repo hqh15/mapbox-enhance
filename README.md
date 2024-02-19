@@ -18,6 +18,46 @@ initMap({
 })
 ```
 
+## `addGeoJSONSource`
+
+Adds a GeoJSON source to the map.
+
+```ts
+addGeoJSONSource({
+  map: any,
+  id: string,
+  data: any
+})
+```
+
+## `addImageSource`
+
+Adds an image source to the map.
+
+```ts
+addImageSource({
+  map: any,
+  url: string,
+  id: string,
+  data: any
+})
+```
+
+## `getColorSteps`
+
+Generates a list of color steps based on the specified parameters.
+
+```ts
+getColorSteps({
+  type: 'eqCount_Ratio' | 'ratio' | any
+  array: number[]
+  count: number
+  colorList: string[]
+  maxIndex: number
+  reverse: boolean
+})
+```
+
 ## `addTextLayer`
 
 Adds a text layer to the map.
@@ -28,9 +68,9 @@ addTextLayer({
   id: string,
   data: any,
   zoomScope: number[],
-  textField: string | any[],
-  textColor: string | any[],
-  textSize: number | any[],
+  field: string | any[],
+  color: string | any[],
+  size: number | any[],
   filter: any[],
   beforeId: string | undefined
 })
@@ -84,7 +124,6 @@ addLineLayer({
   data: any,
   zoomScope: number[],
   color: string | any[],
-  dasharray: number[],
   opacity: number | any[],
   width: number | any[],
   filter: any[],
